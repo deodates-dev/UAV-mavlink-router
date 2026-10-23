@@ -37,12 +37,12 @@ static void exit_signal_handler(int signum)
 
 static void setup_signal_handlers()
 {
-    struct sigaction sa = { };
+    struct sigaction sa = {};
 
     sa.sa_flags = SA_NOCLDSTOP;
     sa.sa_handler = exit_signal_handler;
-    sigaction(SIGTERM, &sa, NULL);
-    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, nullptr);
+    sigaction(SIGINT, &sa, nullptr);
 }
 
 static void handle_new_message(const mavlink_message_t *msg)
@@ -104,16 +104,17 @@ int main(int argc, char *argv[])
         uint8_t buf[1024];
         ssize_t n = read(fd, buf, sizeof(buf));
         if (n == -1) {
-            if (errno == EINTR)
+            if (errno == EINTR) {
                 continue;
+            }
             break;
         }
 
         for (int i = 0; i < n; i++) {
-            if (mavlink_parse_char(MAVLINK_COMM_0, buf[i], &msg, &status))
+            if (mavlink_parse_char(MAVLINK_COMM_0, buf[i], &msg, &status)) {
                 handle_new_message(&msg);
+            }
         }
-
     }
 
     free(ip);

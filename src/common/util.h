@@ -17,19 +17,17 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <time.h>
+#include <vector>
 
 #include "macro.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef uint64_t usec_t;
-typedef uint64_t nsec_t;
+using usec_t = uint64_t;
+using nsec_t = uint64_t;
 #define USEC_INFINITY ((usec_t)-1)
 
 #define MSEC_PER_SEC  1000ULL
@@ -48,13 +46,15 @@ typedef uint64_t nsec_t;
 int safe_atoull(const char *s, unsigned long long *ret);
 int safe_atoul(const char *s, unsigned long *ret);
 int safe_atoi(const char *s, int *ret);
-usec_t now_usec(void);
+usec_t now_usec();
 usec_t ts_usec(const struct timespec *ts);
 
 int mkdir_p(const char *path, int len, mode_t mode);
-#ifdef __cplusplus
+
+template <typename type> bool vector_contains(std::vector<type> vect, type elem)
+{
+    return std::find(vect.begin(), vect.end(), elem) != vect.end();
 }
-#endif
 
 #ifndef strndupa
 #    define strndupa(s, n)                           \

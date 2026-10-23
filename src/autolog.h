@@ -24,13 +24,12 @@
 
 class AutoLog : public LogEndpoint {
 public:
-    AutoLog(const char *logs_dir, LogMode mode, unsigned long min_free_space,
-            unsigned long max_files)
-        : LogEndpoint{"AutoLog", logs_dir, mode, min_free_space, max_files}
+    AutoLog(LogOptions conf)
+        : LogEndpoint{"AutoLog", conf}
     {
     }
 
-    int write_msg(const struct buffer *pbuf) override;
+    int write_msg(const struct buffer *buffer) override;
     int flush_pending_msgs() override { return -ENOSYS; }
 
     bool start() override;

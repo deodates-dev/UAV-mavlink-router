@@ -17,9 +17,12 @@
  */
 #pragma once
 
+#include <common/conf_file.h>
+
 #include <aio.h>
 #include <assert.h>
 #include <dirent.h>
+#include <string>
 
 #include "endpoint.h"
 #include "timeout.h"
@@ -33,10 +36,21 @@ enum class LogMode {
     disabled ///< Do not try to start logging (only used internally)
 };
 
+struct LogOptions {
+    enum class MavDialect { Auto, Common, Ardupilotmega };
+
+    std::string logs_dir;                         // conf "Log" or CLI "log"
+    LogMode log_mode{LogMode::always};            // conf "LogMode"
+    MavDialect mavlink_dialect{MavDialect::Auto}; // conf "MavlinkDialect"
+    unsigned long min_free_space;                 // conf "MinFreeSpace"
+    unsigned long max_log_files;                  // conf "MaxLogFiles"
+    int fcu_id{-1};                               // conf "LogSystemId"
+    bool log_telemetry{false};                    // conf "LogTelemetry"
+};
+
 class LogEndpoint : public Endpoint {
 public:
-    LogEndpoint(const char *name, const char *logs_dir, LogMode mode, unsigned long min_free_space,
-                unsigned long max_files);
+    LogEndpoint(std::string name, LogOptions conf);
 
     virtual bool start();
     virtual void stop();
@@ -48,13 +62,16 @@ public:
      */
     void mark_unfinished_logs();
 
+    static const ConfFile::OptionsTable option_table[];
+    static int parse_mavlink_dialect(const char *val, size_t val_len, void *storage,
+                                     size_t storage_len);
+    static int parse_log_mode(const char *val, size_t val_len, void *storage, size_t storage_len);
+    static int parse_fcu_id(const char *val, size_t val_len, void *storage, size_t storage_len);
+
 protected:
-    const char *_logs_dir;
-    int _target_system_id = -1;
+    LogOptions _config;
+    int _target_system_id;
     int _file = -1;
-    unsigned long _min_free_space;
-    unsigned long _max_files;
-    LogMode _mode;
 
     struct {
         Timeout *logging_start = nullptr;
@@ -75,13 +92,12 @@ protected:
 
     bool _fsync();
 
-    void _handle_auto_start_stop(uint32_t msg_id, uint8_t source_system_id,
-                                 uint8_t source_component_id, uint8_t *payload);
+    void _handle_auto_start_stop(const struct buffer *pbuf);
 
 private:
     int _get_file(const char *extension);
-    uint32_t _get_prefix(DIR *dir);
-    DIR *_open_or_create_dir(const char *name);
+    static uint32_t _get_prefix(DIR *dir);
+    static DIR *_open_or_create_dir(const char *name);
 
     /**
      * Delete old logs until a certain amount of free space and total number of log files are met.

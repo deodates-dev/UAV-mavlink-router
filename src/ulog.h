@@ -23,15 +23,15 @@
 
 class ULog : public LogEndpoint {
 public:
-    ULog(const char *logs_dir, LogMode mode, unsigned long min_free_space, unsigned long max_files)
-        : LogEndpoint{"ULog", logs_dir, mode, min_free_space, max_files}
+    ULog(LogOptions conf)
+        : LogEndpoint{"ULog", conf}
     {
     }
 
     bool start() override;
     void stop() override;
 
-    int write_msg(const struct buffer *pbuf) override;
+    int write_msg(const struct buffer *buffer) override;
     int flush_pending_msgs() override { return -ENOSYS; }
 
 protected:
